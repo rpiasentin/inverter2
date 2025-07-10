@@ -9,8 +9,8 @@ pip install -r requirements.txt
 python web/app.py
 ```
 
+
 Then open `http://localhost:8000` in your browser.
  325wbg-codex/build-web-app-to-read-battery-voltage
 The page includes a log window below the login form showing API activity.
-=======
  main
