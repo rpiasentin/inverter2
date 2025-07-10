@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EG4 18k Battery Monitor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    #login { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h1>EG4 18k Battery Monitor</h1>
+  <div id="login">
+    <label>User: <input type="text" id="user"></label>
+    <label>Pass: <input type="password" id="pass"></label>
+    <button id="loginBtn">Login</button>
+  </div>
+  <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
+  <canvas id="voltageChart" width="600" height="300"></canvas>
+
+  <script>
+    const LOGIN_URL = '/api/login';
+    const VOLTAGE_URL = '/api/voltage';
+    const LOG_URL = '/api/logs';
+
+    const savedCreds = JSON.parse(localStorage.getItem('eg4Creds') || 'null');
+    const ctx = document.getElementById('voltageChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{ label: 'Voltage', data: [], borderColor: 'blue', fill: false }]
+      },
+      options: { scales: { x: { type: 'time', time: { unit: 'second' } } } }
+    });
+
+    let pollId = null;
+    let logPollId = null;
+
+    function logMsg(msg) {
+      const box = document.getElementById('logBox');
+      box.textContent += msg + '\n';
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function pollLogs() {
+      try {
+        const res = await fetch(LOG_URL);
+        const data = await res.json();
+        document.getElementById('logBox').textContent = data.log.join('\n');
+        const box = document.getElementById('logBox');
+        box.scrollTop = box.scrollHeight;
+      } catch (err) {
+        console.error('Log fetch failed', err);
+      }
+    }
+
+    async function startPolling() {
+      clearInterval(pollId);
+      clearInterval(logPollId);
+      await fetchVoltage();
+      pollId = setInterval(fetchVoltage, 30000);
+      logPollId = setInterval(pollLogs, 2000);
+      document.getElementById('login').style.display = 'none';
+    }
+
+    async function login(creds = null) {
+      const user = creds ? creds.user : document.getElementById('user').value;
+      const pass = creds ? creds.pass : document.getElementById('pass').value;
+      try {
+        logMsg('Sending login request');
+        const res = await fetch(LOGIN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('eg4Creds', JSON.stringify({ user, pass }));
+          logMsg('Login success');
+          startPolling();
+        } else {
+          logMsg('Login failed: ' + data.error);
+          alert('Login failed');
+        }
+      } catch (err) {
+        logMsg('Login request error');
+        alert('Login failed');
+      }
+    }
+
+    async function fetchVoltage() {
+      try {
+        logMsg('Requesting voltage');
+        const res = await fetch(VOLTAGE_URL);
+        const data = await res.json();
+        if (!data.success) {
+          logMsg('Voltage error: ' + data.error);
+          return;
+        }
+        const voltage = data.voltage;
+        const now = new Date();
+        chart.data.labels.push(now);
+        chart.data.datasets[0].data.push(voltage);
+        chart.update();
+        logMsg('Voltage: ' + voltage);
+      } catch (err) {
+        console.error('Voltage fetch failed', err);
+        logMsg('Voltage fetch failed');
+      }
+    }
+
+    document.getElementById('loginBtn').onclick = () => login();
+
+    if (savedCreds) {
+      login(savedCreds);
+    } else {
+      pollLogs();
+      logPollId = setInterval(pollLogs, 2000);
+    }
+  </script>
+</body>
+</html>
