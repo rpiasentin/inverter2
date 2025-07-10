@@ -16,11 +16,19 @@
     <label>Pass: <input type="password" id="pass"></label>
     <button id="loginBtn">Login</button>
   </div>
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+  <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
+=======
+ main
   <canvas id="voltageChart" width="600" height="300"></canvas>
 
   <script>
     const LOGIN_URL = '/api/login';
     const VOLTAGE_URL = '/api/voltage';
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+    const LOG_URL = '/api/logs';
+=======
+ main
 
     const savedCreds = JSON.parse(localStorage.getItem('eg4Creds') || 'null');
     const ctx = document.getElementById('voltageChart').getContext('2d');
@@ -34,11 +42,40 @@
     });
 
     let pollId = null;
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+    let logPollId = null;
+
+    function logMsg(msg) {
+      const box = document.getElementById('logBox');
+      box.textContent += msg + '\n';
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function pollLogs() {
+      try {
+        const res = await fetch(LOG_URL);
+        const data = await res.json();
+        document.getElementById('logBox').textContent = data.log.join('\n');
+        const box = document.getElementById('logBox');
+        box.scrollTop = box.scrollHeight;
+      } catch (err) {
+        console.error('Log fetch failed', err);
+      }
+    }
+
+    async function startPolling() {
+      clearInterval(pollId);
+      clearInterval(logPollId);
+      await fetchVoltage();
+      pollId = setInterval(fetchVoltage, 30000);
+      logPollId = setInterval(pollLogs, 2000);
+=======
 
     async function startPolling() {
       clearInterval(pollId);
       await fetchVoltage();
       pollId = setInterval(fetchVoltage, 30000);
+ main
       document.getElementById('login').style.display = 'none';
     }
 
@@ -46,6 +83,10 @@
       const user = creds ? creds.user : document.getElementById('user').value;
       const pass = creds ? creds.pass : document.getElementById('pass').value;
       try {
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+        logMsg('Sending login request');
+=======
+ main
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -54,27 +95,55 @@
         const data = await res.json();
         if (data.success) {
           localStorage.setItem('eg4Creds', JSON.stringify({ user, pass }));
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+          logMsg('Login success');
+          startPolling();
+        } else {
+          logMsg('Login failed: ' + data.error);
+          alert('Login failed');
+        }
+      } catch (err) {
+        logMsg('Login request error');
+=======
           startPolling();
         } else {
           alert('Login failed');
         }
       } catch (err) {
+ main
         alert('Login failed');
       }
     }
 
     async function fetchVoltage() {
       try {
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+        logMsg('Requesting voltage');
+        const res = await fetch(VOLTAGE_URL);
+        const data = await res.json();
+        if (!data.success) {
+          logMsg('Voltage error: ' + data.error);
+          return;
+        }
+=======
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
         if (!data.success) return;
+ main
         const voltage = data.voltage;
         const now = new Date();
         chart.data.labels.push(now);
         chart.data.datasets[0].data.push(voltage);
         chart.update();
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+        logMsg('Voltage: ' + voltage);
       } catch (err) {
         console.error('Voltage fetch failed', err);
+        logMsg('Voltage fetch failed');
+=======
+      } catch (err) {
+        console.error('Voltage fetch failed', err);
+ main
       }
     }
 
@@ -82,6 +151,12 @@
 
     if (savedCreds) {
       login(savedCreds);
+ 325wbg-codex/build-web-app-to-read-battery-voltage
+    } else {
+      pollLogs();
+      logPollId = setInterval(pollLogs, 2000);
+=======
+ main
     }
   </script>
 </body>
