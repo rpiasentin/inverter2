@@ -52,6 +52,17 @@ def _init_log():
 _init_log()
 
 
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+
+_init_log()
+
+
 def add_log(message: str) -> None:
     """Store a timestamped log message for troubleshooting."""
     timestamp = datetime.now().strftime("%H:%M:%S")
@@ -89,8 +100,10 @@ def login():
 
 
 
+
     add_log("Attempting to log in to the EG4 cloud")
 main
+
     try:
         add_log("Sending login request...")
         asyncio.run(api_client.login())
@@ -98,9 +111,11 @@ main
         inverters = api_client.get_inverters()
         if not inverters:
 
+
             add_log("Login succeeded but no inverters were found for this account")
             return jsonify({"success": False, "error": "No inverters found"}), 400
 main
+
         serial_number = inverters[0].serialNum
         api_client.set_selected_inverter(inverterIndex=0)
         add_log(
@@ -122,8 +137,10 @@ def voltage():
 
 
 
+
         add_log("Requesting current battery voltage from inverter")
 main
+
 
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
