@@ -78,7 +78,7 @@ def login():
 
 
     add_log("Attempting to log in to the EG4 cloud")
-  main
+main
     try:
         add_log("Sending login request...")
         asyncio.run(api_client.login())
