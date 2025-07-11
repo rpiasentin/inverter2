@@ -16,7 +16,9 @@
     <label>Pass: <input type="password" id="pass"></label>
     <button id="loginBtn">Login</button>
   </div>
+
   <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
+ main
   <div id="timer" style="font-weight:bold; margin-bottom:1em;"></div>
   <canvas id="voltageChart" width="600" height="300"></canvas>
 
@@ -27,14 +29,19 @@
 
     const savedCreds = JSON.parse(localStorage.getItem('eg4Creds') || 'null');
     const ctx = document.getElementById('voltageChart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{ label: 'Voltage', data: [], borderColor: 'blue', fill: false }]
-      },
-      options: { scales: { x: { type: 'time', time: { unit: 'second' } } } }
-    });
+    let chart = null;
+    if (typeof Chart === 'undefined') {
+      document.getElementById('logBox').textContent += 'Chart.js failed to load. Voltage graph disabled.\n';
+    } else {
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{ label: 'Voltage', data: [], borderColor: 'blue', fill: false }]
+        },
+        options: { scales: { x: { type: 'time', time: { unit: 'second' } } } }
+      });
+    }
 
     let pollId = null;
     let logPollId = null;
@@ -73,10 +80,12 @@
         box.scrollTop = box.scrollHeight;
       } catch (err) {
         console.error('Log fetch failed', err);
+        logMsg('Error retrieving log data: ' + err);
       }
     }
 
     async function startPolling() {
+      logMsg('Starting periodic voltage checks');
       clearInterval(pollId);
       clearInterval(logPollId);
       await fetchVoltage();
@@ -90,13 +99,16 @@
       const user = creds ? creds.user : document.getElementById('user').value;
       const pass = creds ? creds.pass : document.getElementById('pass').value;
       try {
+
         logMsg('Connecting to the EG4 cloud...');
+ main
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: user, password: pass })
         });
         const data = await res.json();
+        logMsg('Response received in ' + (Date.now() - start) + ' ms');
         if (data.success) {
           localStorage.setItem('eg4Creds', JSON.stringify({ user, pass }));
           logMsg('Login successful. Starting data collection.');
@@ -113,18 +125,23 @@
 
     async function fetchVoltage() {
       try {
+
         logMsg('Asking the inverter for the latest battery voltage...');
+ main
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
+        logMsg('Voltage response received in ' + (Date.now() - start) + ' ms');
         if (!data.success) {
           logMsg('Voltage error: ' + data.error);
           return;
         }
         const voltage = data.voltage;
         const now = new Date();
-        chart.data.labels.push(now);
-        chart.data.datasets[0].data.push(voltage);
-        chart.update();
+        if (chart) {
+          chart.data.labels.push(now);
+          chart.data.datasets[0].data.push(voltage);
+          chart.update();
+        }
         logMsg('Voltage: ' + voltage);
         startCountdown();
       } catch (err) {

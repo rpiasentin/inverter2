@@ -5,6 +5,7 @@ This backend exposes endpoints to log in to the EG4 cloud API and fetch the
 battery voltage. A small in-memory log is also kept to help debug API calls.
 """
 
+import os
 from flask import Flask, request, jsonify, send_from_directory
 import asyncio
 from datetime import datetime
@@ -19,6 +20,15 @@ api_client = None
 serial_number = None
 log_messages = []
 
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+_init_log()
+
 
 def add_log(message: str) -> None:
     """Store a timestamped log message for troubleshooting."""
@@ -32,7 +42,9 @@ def add_log(message: str) -> None:
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    # Serve the frontend HTML regardless of working directory
+    frontend_dir = os.path.dirname(os.path.abspath(__file__))
+    return send_from_directory(frontend_dir, "index.html")
 
 
 @app.route("/api/logs")
@@ -52,9 +64,13 @@ def login():
     password = data["password"]
 
     api_client = EG4InverterAPI(username, password)
+
     add_log("Attempting to log in to the EG4 cloud")
+ main
     try:
+        add_log("Sending login request...")
         asyncio.run(api_client.login())
+        add_log("Login request complete. Processing response")
         inverters = api_client.get_inverters()
         if not inverters:
             add_log("Login succeeded but no inverters were found for this account")
@@ -77,7 +93,9 @@ def voltage():
         add_log("Voltage requested without login")
         return jsonify({"success": False, "error": "Not logged in"}), 400
     try:
+
         add_log("Requesting current battery voltage from inverter")
+ main
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
         voltage = float(battery_data.totalVoltageText)
