@@ -17,6 +17,7 @@
     <button id="loginBtn">Login</button>
   </div>
 
+
   <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
  main
   <div id="timer" style="font-weight:bold; margin-bottom:1em;"></div>
@@ -100,6 +101,7 @@
       const pass = creds ? creds.pass : document.getElementById('pass').value;
       try {
 
+
         logMsg('Connecting to the EG4 cloud...');
  main
         const res = await fetch(LOGIN_URL, {
@@ -126,8 +128,9 @@
     async function fetchVoltage() {
       try {
 
+
         logMsg('Asking the inverter for the latest battery voltage...');
- main
+  main
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
         logMsg('Voltage response received in ' + (Date.now() - start) + ' ms');
