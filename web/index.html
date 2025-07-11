@@ -18,8 +18,10 @@
   </div>
 
 
+
   <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
- main
+main
+
   <div id="timer" style="font-weight:bold; margin-bottom:1em;"></div>
   <canvas id="voltageChart" width="600" height="300"></canvas>
 
@@ -102,8 +104,10 @@
       try {
 
 
+
         logMsg('Connecting to the EG4 cloud...');
  main
+
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -129,8 +133,10 @@
       try {
 
 
+
         logMsg('Asking the inverter for the latest battery voltage...');
   main
+
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
         logMsg('Voltage response received in ' + (Date.now() - start) + ' ms');
