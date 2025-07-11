@@ -5,6 +5,12 @@ This backend exposes endpoints to log in to the EG4 cloud API and fetch the
 battery voltage. A small in-memory log is also kept to help debug API calls.
 """
 
+
+
+import os
+from flask import Flask, request, jsonify, send_from_directory
+main
+
 import asyncio
 import logging
 import os
@@ -20,6 +26,59 @@ logging.basicConfig(level=logging.INFO)
 api_client = None
 serial_number = None
 log_messages = []
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
+
+_init_log()
 
 
 # Initial log entry so the user sees immediate feedback
@@ -67,29 +126,38 @@ def login():
     password = data["password"]
 
     api_client = EG4InverterAPI(username, password)
-    log_msg = "Preparing login request to {} for user {}".format(
-        api_client._login_url, username
-    )
-    add_log(log_msg)
+
+
+
+
+
+
+    add_log("Attempting to log in to the EG4 cloud")
+main
+
+
+
     try:
         add_log("Sending login request...")
         asyncio.run(api_client.login())
         add_log("Login request complete. Processing response")
         inverters = api_client.get_inverters()
         if not inverters:
-            log_msg = "Login succeeded but no inverters were found for this account"  # noqa: E501
-            add_log(log_msg)
-            return (
-                jsonify({"success": False, "error": "No inverters found"}),
-                400,
-            )
+
+
+
+
+            add_log("Login succeeded but no inverters were found for this account")
+            return jsonify({"success": False, "error": "No inverters found"}), 400
+main
+
+
         serial_number = inverters[0].serialNum
         api_client.set_selected_inverter(inverterIndex=0)
-        log_msg = (
-            "Login successful. Selected inverter "
-            f"{serial_number}. Starting periodic voltage checks."
+        add_log(
+            f"Login successful. Selected inverter {serial_number}. Starting periodic voltage checks."
         )
-        add_log(log_msg)
+
         return jsonify({"success": True, "serial": serial_number})
     except Exception as e:
         api_client = None
@@ -103,10 +171,18 @@ def voltage():
         add_log("Voltage requested without login")
         return jsonify({"success": False, "error": "Not logged in"}), 400
     try:
-        log_msg = "Sending request to {} for voltage".format(
-            api_client._inverter_battery_url
-        )
-        add_log(log_msg)
+
+
+
+
+
+
+        add_log("Requesting current battery voltage from inverter")
+main
+
+
+
+
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
         voltage = float(battery_data.totalVoltageText)
