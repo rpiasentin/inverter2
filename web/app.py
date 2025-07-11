@@ -157,7 +157,7 @@ try:
         )
 
         return jsonify({"success": True, "serial": serial_number})
-    except Exception as e:
+except Exception as e:
         api_client = None
         add_log(f"Login failed with error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
