@@ -108,7 +108,7 @@ def voltage():
 
 
         add_log("Requesting current battery voltage from inverter")
- main
+main
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
         voltage = float(battery_data.totalVoltageText)
