@@ -16,7 +16,8 @@
     <label>Pass: <input type="password" id="pass"></label>
     <button id="loginBtn">Login</button>
   </div>
-  <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
+  <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;">Loading... please enter your EG4 credentials.</pre>
+  <div id="timer" style="font-weight:bold; margin-bottom:1em;"></div>
   <canvas id="voltageChart" width="600" height="300"></canvas>
 
   <script>
@@ -26,17 +27,41 @@
 
     const savedCreds = JSON.parse(localStorage.getItem('eg4Creds') || 'null');
     const ctx = document.getElementById('voltageChart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{ label: 'Voltage', data: [], borderColor: 'blue', fill: false }]
-      },
-      options: { scales: { x: { type: 'time', time: { unit: 'second' } } } }
-    });
+    let chart = null;
+    if (typeof Chart === 'undefined') {
+      document.getElementById('logBox').textContent += 'Chart.js failed to load. Voltage graph disabled.\n';
+    } else {
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{ label: 'Voltage', data: [], borderColor: 'blue', fill: false }]
+        },
+        options: { scales: { x: { type: 'time', time: { unit: 'second' } } } }
+      });
+    }
 
     let pollId = null;
     let logPollId = null;
+    let timerId = null;
+    let countdown = 30;
+
+    function updateTimer() {
+      document.getElementById('timer').textContent =
+        'Next voltage check in ' + countdown + ' seconds';
+    }
+
+    function startCountdown() {
+      countdown = 30;
+      updateTimer();
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (countdown > 0) {
+          countdown--;
+          updateTimer();
+        }
+      }, 1000);
+    }
 
     function logMsg(msg) {
       const box = document.getElementById('logBox');
@@ -53,14 +78,17 @@
         box.scrollTop = box.scrollHeight;
       } catch (err) {
         console.error('Log fetch failed', err);
+        logMsg('Error retrieving log data: ' + err);
       }
     }
 
     async function startPolling() {
+      logMsg('Starting periodic voltage checks');
       clearInterval(pollId);
       clearInterval(logPollId);
       await fetchVoltage();
       pollId = setInterval(fetchVoltage, 30000);
+      startCountdown();
       logPollId = setInterval(pollLogs, 2000);
       document.getElementById('login').style.display = 'none';
     }
@@ -69,45 +97,52 @@
       const user = creds ? creds.user : document.getElementById('user').value;
       const pass = creds ? creds.pass : document.getElementById('pass').value;
       try {
-        logMsg('Sending login request');
+        logMsg('POST ' + LOGIN_URL + ' -> sending credentials');
+        const start = Date.now();
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: user, password: pass })
         });
         const data = await res.json();
+        logMsg('Response received in ' + (Date.now() - start) + ' ms');
         if (data.success) {
           localStorage.setItem('eg4Creds', JSON.stringify({ user, pass }));
-          logMsg('Login success');
+          logMsg('Login successful. Starting data collection.');
           startPolling();
         } else {
           logMsg('Login failed: ' + data.error);
           alert('Login failed');
         }
       } catch (err) {
-        logMsg('Login request error');
+        logMsg('Unable to reach the login service: ' + err);
         alert('Login failed');
       }
     }
 
     async function fetchVoltage() {
       try {
-        logMsg('Requesting voltage');
+        logMsg('GET ' + VOLTAGE_URL + ' -> requesting voltage');
+        const start = Date.now();
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
+        logMsg('Voltage response received in ' + (Date.now() - start) + ' ms');
         if (!data.success) {
           logMsg('Voltage error: ' + data.error);
           return;
         }
         const voltage = data.voltage;
         const now = new Date();
-        chart.data.labels.push(now);
-        chart.data.datasets[0].data.push(voltage);
-        chart.update();
+        if (chart) {
+          chart.data.labels.push(now);
+          chart.data.datasets[0].data.push(voltage);
+          chart.update();
+        }
         logMsg('Voltage: ' + voltage);
+        startCountdown();
       } catch (err) {
         console.error('Voltage fetch failed', err);
-        logMsg('Voltage fetch failed');
+        logMsg('Voltage request failed: ' + err);
       }
     }
 
