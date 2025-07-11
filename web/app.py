@@ -170,16 +170,7 @@ def voltage():
         return jsonify({"success": False, "error": "Not logged in"}), 400
     try:
 
-
-
-
-
-
         add_log("Requesting current battery voltage from inverter")
-main
-
-
-
 
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
