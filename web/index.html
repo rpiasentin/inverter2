@@ -22,8 +22,10 @@
 
 
 
+
   <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
 main
+
 
 
 
@@ -114,11 +116,9 @@ main
 
 
 
+
         logMsg('Connecting to the EG4 cloud...');
  main
-
-
-
 
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
@@ -148,10 +148,9 @@ main
 
 
 
+
         logMsg('Asking the inverter for the latest battery voltage...');
   main
-
-
 
 
         const res = await fetch(VOLTAGE_URL);

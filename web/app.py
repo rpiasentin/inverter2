@@ -7,9 +7,11 @@ battery voltage. A small in-memory log is also kept to help debug API calls.
 
 
 
+
 import os
 from flask import Flask, request, jsonify, send_from_directory
 main
+
 
 import asyncio
 import logging
@@ -33,6 +35,17 @@ def _init_log():
     entry = f"{timestamp} - Server started. Awaiting login credentials."
     log_messages.append(entry)
     logging.info(entry)
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
 
 _init_log()
 
@@ -132,17 +145,20 @@ def login():
 
 
 
+
     add_log("Attempting to log in to the EG4 cloud")
 main
 
 
 
 try:
+
         add_log("Sending login request...")
         asyncio.run(api_client.login())
         add_log("Login request complete. Processing response")
         inverters = api_client.get_inverters()
         if not inverters:
+
 
 
 
@@ -155,6 +171,7 @@ try:
         add_log(
             f"Login successful. Selected inverter {serial_number}. Starting periodic voltage checks."
         )
+
 
         return jsonify({"success": True, "serial": serial_number})
 except Exception as e:
@@ -170,7 +187,9 @@ def voltage():
         return jsonify({"success": False, "error": "Not logged in"}), 400
     try:
 
+
         add_log("Requesting current battery voltage from inverter")
+
 
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
