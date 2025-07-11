@@ -52,20 +52,22 @@ def login():
     password = data["password"]
 
     api_client = EG4InverterAPI(username, password)
-    add_log("Attempting login")
+    add_log("Attempting to log in to the EG4 cloud")
     try:
         asyncio.run(api_client.login())
         inverters = api_client.get_inverters()
         if not inverters:
-            add_log("No inverters found after login")
+            add_log("Login succeeded but no inverters were found for this account")
             return jsonify({"success": False, "error": "No inverters found"}), 400
         serial_number = inverters[0].serialNum
         api_client.set_selected_inverter(inverterIndex=0)
-        add_log(f"Login successful. Selected inverter {serial_number}")
+        add_log(
+            f"Login successful. Selected inverter {serial_number}. Starting periodic voltage checks."
+        )
         return jsonify({"success": True, "serial": serial_number})
     except Exception as e:
         api_client = None
-        add_log(f"Login error: {e}")
+        add_log(f"Login failed with error: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -75,14 +77,14 @@ def voltage():
         add_log("Voltage requested without login")
         return jsonify({"success": False, "error": "Not logged in"}), 400
     try:
-        add_log("Requesting battery voltage")
+        add_log("Requesting current battery voltage from inverter")
         battery_data = api_client.get_inverter_battery()
         # Use totalVoltageText from overall data
         voltage = float(battery_data.totalVoltageText)
-        add_log(f"Voltage response: {voltage}")
+        add_log(f"Received voltage reading: {voltage} V")
         return jsonify({"success": True, "voltage": voltage})
     except Exception as e:
-        add_log(f"Voltage error: {e}")
+        add_log(f"Error retrieving voltage: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 

@@ -13,4 +13,4 @@ python web/app.py
 Make sure you are running Python 3.8 or higher. The application starts a local
 Flask server on port 8000.
 
-Then open `http://localhost:8000` in your browser. The page includes a log window below the login form showing API activity. After a successful login your credentials are stored in local storage and battery voltage is retrieved every 30 seconds for display on a line chart.
+Then open `http://localhost:8000` in your browser. The page includes a log window below the login form showing API activity. After a successful login your credentials are stored in local storage and battery voltage is retrieved every 30 seconds for display on a line chart. A timer indicates when the next voltage check will occur and the log clearly explains each step and any errors encountered.

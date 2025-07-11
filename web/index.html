@@ -17,6 +17,7 @@
     <button id="loginBtn">Login</button>
   </div>
   <pre id="logBox" style="border:1px solid #ccc; height:150px; overflow:auto; background:#f9f9f9; padding:4px; margin-bottom:1em;"></pre>
+  <div id="timer" style="font-weight:bold; margin-bottom:1em;"></div>
   <canvas id="voltageChart" width="600" height="300"></canvas>
 
   <script>
@@ -37,6 +38,25 @@
 
     let pollId = null;
     let logPollId = null;
+    let timerId = null;
+    let countdown = 30;
+
+    function updateTimer() {
+      document.getElementById('timer').textContent =
+        'Next voltage check in ' + countdown + ' seconds';
+    }
+
+    function startCountdown() {
+      countdown = 30;
+      updateTimer();
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (countdown > 0) {
+          countdown--;
+          updateTimer();
+        }
+      }, 1000);
+    }
 
     function logMsg(msg) {
       const box = document.getElementById('logBox');
@@ -61,6 +81,7 @@
       clearInterval(logPollId);
       await fetchVoltage();
       pollId = setInterval(fetchVoltage, 30000);
+      startCountdown();
       logPollId = setInterval(pollLogs, 2000);
       document.getElementById('login').style.display = 'none';
     }
@@ -69,7 +90,7 @@
       const user = creds ? creds.user : document.getElementById('user').value;
       const pass = creds ? creds.pass : document.getElementById('pass').value;
       try {
-        logMsg('Sending login request');
+        logMsg('Connecting to the EG4 cloud...');
         const res = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,21 +99,21 @@
         const data = await res.json();
         if (data.success) {
           localStorage.setItem('eg4Creds', JSON.stringify({ user, pass }));
-          logMsg('Login success');
+          logMsg('Login successful. Starting data collection.');
           startPolling();
         } else {
           logMsg('Login failed: ' + data.error);
           alert('Login failed');
         }
       } catch (err) {
-        logMsg('Login request error');
+        logMsg('Unable to reach the login service: ' + err);
         alert('Login failed');
       }
     }
 
     async function fetchVoltage() {
       try {
-        logMsg('Requesting voltage');
+        logMsg('Asking the inverter for the latest battery voltage...');
         const res = await fetch(VOLTAGE_URL);
         const data = await res.json();
         if (!data.success) {
@@ -105,9 +126,10 @@
         chart.data.datasets[0].data.push(voltage);
         chart.update();
         logMsg('Voltage: ' + voltage);
+        startCountdown();
       } catch (err) {
         console.error('Voltage fetch failed', err);
-        logMsg('Voltage fetch failed');
+        logMsg('Voltage request failed: ' + err);
       }
     }
 
