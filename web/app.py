@@ -5,12 +5,17 @@ This backend exposes endpoints to log in to the EG4 cloud API and fetch the
 battery voltage. A small in-memory log is also kept to help debug API calls.
 """
 
+
 import os
 from flask import Flask, request, jsonify, send_from_directory
+main
 import asyncio
-from datetime import datetime
 import logging
+import os
+from datetime import datetime
+
 from eg4_inverter_api.client import EG4InverterAPI
+from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__)
 
@@ -26,6 +31,17 @@ def _init_log():
     entry = f"{timestamp} - Server started. Awaiting login credentials."
     log_messages.append(entry)
     logging.info(entry)
+
+_init_log()
+
+
+# Initial log entry so the user sees immediate feedback
+def _init_log():
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = f"{timestamp} - Server started. Awaiting login credentials."
+    log_messages.append(entry)
+    logging.info(entry)
+
 
 _init_log()
 
@@ -101,8 +117,10 @@ def login():
 
 
 
+
     add_log("Attempting to log in to the EG4 cloud")
 main
+
 
     try:
         add_log("Sending login request...")
@@ -112,9 +130,11 @@ main
         if not inverters:
 
 
+
             add_log("Login succeeded but no inverters were found for this account")
             return jsonify({"success": False, "error": "No inverters found"}), 400
 main
+
 
         serial_number = inverters[0].serialNum
         api_client.set_selected_inverter(inverterIndex=0)
@@ -138,8 +158,10 @@ def voltage():
 
 
 
+
         add_log("Requesting current battery voltage from inverter")
 main
+
 
 
         battery_data = api_client.get_inverter_battery()
