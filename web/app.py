@@ -149,8 +149,6 @@ try:
 
             add_log("Login succeeded but no inverters were found for this account")
             return jsonify({"success": False, "error": "No inverters found"}), 400
-main
-
 
         serial_number = inverters[0].serialNum
         api_client.set_selected_inverter(inverterIndex=0)
