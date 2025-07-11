@@ -137,7 +137,7 @@ main
 
 
 
-    try:
+try:
         add_log("Sending login request...")
         asyncio.run(api_client.login())
         add_log("Login request complete. Processing response")
